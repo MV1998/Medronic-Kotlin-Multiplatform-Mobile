@@ -1,39 +1,89 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+Medronic – Kotlin Multiplatform Mobile Playground
+📱 Overview
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Medronic is a Kotlin Multiplatform Mobile (KMM) learning project focused on building shared business logic with native UIs using:
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Jetpack Compose for Android
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+SwiftUI for iOS
 
-### Build and Run Android Application
+Instead of creating multiple separate KMM repositories, this project acts as a single, structured KMM workspace where multiple mini-projects live together.
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+Each feature or experiment is organized section-wise at the package/module level, making it easier to learn, iterate, and compare implementations without managing many repositories.
 
-### Build and Run iOS Application
+🎯 Primary Goal
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+The primary goal of this project is to learn and master Kotlin Multiplatform Mobile by:
 
----
+Sharing common business logic across Android and iOS
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Building fully native UIs on each platform
+
+Exploring real-world use cases inside a single KMM project
+
+This repository is designed as a learning lab, not a production app.
+
+🧩 Project Structure Philosophy
+
+Instead of creating a new KMM project for every idea:
+
+✅ One main KMM project
+
+✅ Multiple package-level / feature-level mini projects
+
+✅ Each section focuses on a specific concept, use case, or experiment
+
+Example ideas for sections:
+
+Authentication
+
+Networking
+
+State management
+
+Database & caching
+
+UI + ViewModel integration
+
+Platform-specific APIs
+
+This approach keeps everything:
+
+Centralized
+
+Easier to maintain
+
+Faster to experiment with
+
+Better for long-term learning
+
+🚀 Goals
+
+Learn Kotlin Multiplatform Mobile deeply
+
+Understand how to share logic cleanly between Android & iOS
+
+Practice Jetpack Compose and SwiftUI side by side
+
+Experiment with different architectures and patterns
+
+Avoid boilerplate overhead of creating multiple KMM repositories
+
+Build a reusable reference project for future KMM work
+
+🛠 Tech Stack
+
+Kotlin Multiplatform Mobile (KMM)
+
+Jetpack Compose (Android UI)
+
+SwiftUI (iOS UI)
+
+Kotlin Coroutines / Flow
+
+Gradle (Kotlin DSL)
+
+📌 Note
+
+This project is primarily for learning and experimentation.
+Expect frequent refactoring, new sections, and evolving patterns as knowledge grows.
