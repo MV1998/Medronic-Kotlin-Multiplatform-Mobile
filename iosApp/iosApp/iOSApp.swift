@@ -4,9 +4,20 @@ import SwiftUI
 struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
-            PlaceholderPhotosListScreen()
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                .background(Color.white)
+            NavigationStack() {
+                List {
+                    NavigationLink("Fruit List") {
+                        FruitListAppWithSearch()
+                    }
+                    NavigationLink("Place Holder Photos List") {
+                        PlaceholderPhotosListScreen()
+                    }
+                    NavigationLink("Quiz App") {
+                        QuizAppScreen()
+                    }
+                }
+            }
+            .navigationTitle("Swift UI")
         }
     }
 }

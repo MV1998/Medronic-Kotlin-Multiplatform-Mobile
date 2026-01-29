@@ -63,7 +63,6 @@ struct PlaceholderPhotosListScreen: View {
                                     .fontWeight(.bold)
                                     .padding()
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                Text(element.url)
                             }
                             AsyncImage(url: URL(string: "https://picsum.photos/200/300")) { image in
                                 image
