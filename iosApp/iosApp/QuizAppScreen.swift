@@ -17,6 +17,9 @@ class QuizAppViewModelWrapper : ObservableObject {
     @Published var isLoading : Bool = true
     @Published var isLastQuestion : Bool = false
     @Published var currentQuestion : Question? = nil
+    @Published var totalAnswered : Int = 0
+    @Published var totalQuestion : Int = 0
+    @Published var questionList : [Question] = []
     
     private var cancellations = Set<AnyCancellable>()
     
@@ -32,12 +35,19 @@ class QuizAppViewModelWrapper : ObservableObject {
             self?.isLoading = state.isLoading
             self?.currentQuestion = state.currentQuestion
             self?.isLastQuestion = state.isLastQuestion
+            self?.totalAnswered = Int(state.totalWrongCount + state.totalCorrectCount)
+            self?.totalQuestion = Int(state.quizList.count)
+            self?.questionList = state.quizList
         }
         .store(in: &cancellations)
     }
     
     func onNext() {
         quizViewModel.onNext()
+    }
+    
+    func onPrevious() {
+        quizViewModel.onPrevious()
     }
     
     func onOptionSelect(id : Int) {
@@ -50,6 +60,8 @@ struct QuizAppScreen: View {
     
     @StateObject private var quizAppViewModelWrapper = QuizAppViewModelWrapper()
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) private var dismiss
+    @State private var showAlert = false
     
     var body: some View {
         if (quizAppViewModelWrapper.isLoading) {
@@ -73,23 +85,36 @@ struct QuizAppScreen: View {
                     .foregroundColor(.questionTxt.opacity(0.5))
                 Spacer()
                 HStack {
-                    Text("Question 06/20")
+                    Text("Question \(quizAppViewModelWrapper.totalAnswered)/\(quizAppViewModelWrapper.totalQuestion)")
                         .foregroundColor(.questionTxt)
                         .fontWeight(.bold)
                         .font(.system(size: 28))
                 }
                 
                 LazyHStack(alignment : .top) {
-                    ForEach(0..<20) { index in
-                        Divider()
-                            .frame(width: 10, height: 2, alignment: .leading)
-                            .background(index % 2 == 0 ? .green : .red)
+                    
+                    ForEach(quizAppViewModelWrapper.questionList.indices, id: \.self) { index in
+                            Divider()
+                                    .frame(width: 10, height: 2, alignment: .leading)
+                                    .background(divideColor(index: index))
                     }
                 }
                 .frame(maxWidth: .infinity,maxHeight: 2, alignment: .center)
                 
-                Spacer()
-                    .frame(height: 100)
+                VStack{
+                    if let currentQuestion = quizAppViewModelWrapper.currentQuestion, currentQuestion.isAnswered {
+                        Image(systemName:
+                                currentQuestion.isCorrect ?
+                              "checkmark.circle.fill" : "xmark.circle.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 48, height: 48, alignment: .center)
+                        .foregroundColor(currentQuestion.isCorrect ? .green : .red)
+                        Text(currentQuestion.isCorrect ? "Correct" : "Wrong")
+                            .foregroundColor(currentQuestion.isCorrect ? .green : .red)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: 100, alignment: .center)
                 
                 Text(quizAppViewModelWrapper.currentQuestion!.title)
                     .foregroundColor(.questionTxt)
@@ -107,18 +132,18 @@ struct QuizAppScreen: View {
                             HStack {
                                 Text(option.title)
                                     .foregroundColor(
-                                        quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId == -1 ? .gray :
-                                            quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId ==
+                                        !quizAppViewModelWrapper.currentQuestion!.isAnswered ? .gray :
+                                            quizAppViewModelWrapper.currentQuestion!.correctOptionId ==
                                         option.id ? .green : .red
                                     )
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 Image(systemName:
-                                        quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId == -1 ? "circle" :
-                                            quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId ==
+                                        !quizAppViewModelWrapper.currentQuestion!.isAnswered ? "circle" :
+                                            quizAppViewModelWrapper.currentQuestion!.correctOptionId ==
                                       option.id ? "checkmark.circle.fill" : "xmark.circle.fill") //xmark, checkmark
                                     .foregroundColor(
-                                        quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId == -1 ? .gray :
-                                            quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId ==
+                                        !quizAppViewModelWrapper.currentQuestion!.isAnswered ? .gray :
+                                            quizAppViewModelWrapper.currentQuestion!.correctOptionId ==
                                         option.id ? .green : .red
                                     )
                             }
@@ -126,36 +151,92 @@ struct QuizAppScreen: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(
-                                        quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId == -1 ? .gray :
-                                            quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId ==
+                                        !quizAppViewModelWrapper.currentQuestion!.isAnswered ? .gray :
+                                            quizAppViewModelWrapper.currentQuestion!.correctOptionId ==
                                         option.id ? .green : .red
                                             , lineWidth: 2)
                             )
                             .frame(maxWidth: .infinity, alignment: .top)
                         }
                         .buttonStyle(.plain)
-                        .disabled(quizAppViewModelWrapper.currentQuestion!.userSelectedOptionId != -1)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
-                if (!quizAppViewModelWrapper.isLastQuestion) {
-                    Button {
-                        quizAppViewModelWrapper.onNext()
-                    } label: {
-                        Text("Next")
+                
+                Spacer()
+                    .frame(height: 60)
+                
+                VStack {
+                    HStack {
+                        if (quizAppViewModelWrapper.currentQuestionIndex > 0) {
+                            Button {
+                                quizAppViewModelWrapper.onPrevious()
+                            } label: {
+                                Text("Previous")
+                                    .foregroundColor(.questionTxt)
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(.blue)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        
+                        if (!quizAppViewModelWrapper.isLastQuestion) {
+                            
+                            Button {
+                                quizAppViewModelWrapper.onNext()
+                            } label: {
+                                Text("Next")
+                                    .foregroundColor(.questionTxt)
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(.blue)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                        
                     }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                    )
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity)
+                    
+                    Button {
+                        showAlert = true
+                    } label: {
+                        Text("Quit Quiz")
+                            .foregroundColor(.questionTxt)
+                    }
+                    .buttonStyle(.plain)
                 }
+                
             }
             .padding()
             .frame(maxWidth : .infinity, maxHeight: .infinity, alignment: .top)
             .background(.quizBackground)
+            .alert("Do you want to quit?", isPresented: $showAlert) {
+                VStack {
+                    Button("No", role: .cancel) {
+                        showAlert = false
+                    }
+                    Button("Yes", role: .destructive) {
+                        showAlert = false
+                        dismiss()
+                    }
+                }
+            } message : {
+                Text("You will lost your score.")
+            }
+            .navigationBarBackButtonHidden(true)
         }
+    }
+    
+    func divideColor(index : Int) -> Color {
+        return quizAppViewModelWrapper.questionList[index].isAnswered
+        ? quizAppViewModelWrapper.questionList[index].isCorrect ? .green : .red
+        : quizAppViewModelWrapper.currentQuestionIndex == index ? .questionTxt : .gray
     }
 }
 

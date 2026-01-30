@@ -277,7 +277,7 @@ class QuizRepositoryImpl : QuizRepository {
             )
         )
         return flow {
-            delay(4000) // Network simulation
+            delay(2000) // Network simulation
             emit(questions.map { it.toDomain() })
         }
     }

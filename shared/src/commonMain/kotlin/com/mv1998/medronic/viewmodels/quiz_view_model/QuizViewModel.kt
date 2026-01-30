@@ -53,12 +53,25 @@ class QuizViewModel(private val quizUseCase: QuizUseCase) : ViewModel() {
             val nextIndex = _quizState.value.currentQuestionIndex + 1
             if (nextIndex < _quizState.value.quizList.size) {
                 state.copy(
-                    currentQuestionIndex = nextIndex
+                    currentQuestionIndex = nextIndex,
+                    isLastQuestion = nextIndex == _quizState.value.quizList.size - 1
                 )
             } else {
+                state
+            }
+        }
+    }
+
+    fun onPrevious() {
+        _quizState.update { state ->
+            val previousIndex = _quizState.value.currentQuestionIndex - 1
+            if (previousIndex >= 0) {
                 state.copy(
-                    isLastQuestion = true
+                    currentQuestionIndex = previousIndex,
+                    isLastQuestion = false
                 )
+            } else {
+                state
             }
         }
     }
@@ -78,7 +91,7 @@ class QuizViewModel(private val quizUseCase: QuizUseCase) : ViewModel() {
             val wrongCount = updatedQuizList.count { it.isAnswered && !it.isCorrect }
             state.copy(
                 quizList = updatedQuizList,
-                userSelected = currentQuestion.userSelectedOptionId ?: -1,
+                userSelected = currentQuestion.userSelectedOptionId,
                 correctAnswer = currentQuestion.correctOptionId,
                 totalCorrectCount = correctCount,
                 totalWrongCount = wrongCount
